@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>PermissionCourt — Agent mandates, independently judged</title>
+</head>
+<body>
+  <div class="shell">
+    <header class="site-header">
+      <div class="brand"><span class="brand-icon">PC</span><span>PermissionCourt <small>by LuxeDigitalNest</small></span></div>
+      <div class="header-right"><span class="network"><i></i> GenLayer Studionet</span><button id="connect" class="btn btn-outline">Connect MetaMask</button></div>
+    </header>
+    <main>
+      <div class="hero">
+        <div class="eyebrow">INTERNET COURT / PARTNER DEMO LAB</div>
+        <h1>Did your AI agent <em>follow the mandate?</em></h1>
+        <p class="subtitle">A wallet signs what an agent may do. GenLayer's independent validators examine a proposed action against that mandate and produce an auditable decision.</p>
+        <div class="partnership"><span>MetaMask</span><b>×</b><span>GenLayer</span><b>×</b><span>Internet Court</span></div>
+      </div>
+      <section class="workspace">
+        <div class="form-panel">
+          <div class="panel-top"><div><div class="step-label">01 / EVIDENCE</div><h2>Define the mandate</h2></div><span class="tag">NO REAL FUNDS</span></div>
+          <label>GenLayer contract address <span>Studionet</span></label>
+          <input id="contract" type="text" spellcheck="false" placeholder="0x... (deployed PermissionCourt contract)">
+          <label>Case ID <span>unique per evaluation</span></label>
+          <input id="caseId" type="text" spellcheck="false">
+          <label>Owner's mandate <span>what the agent is allowed to do</span></label>
+          <textarea id="mandate" rows="3">Purchase a research report for no more than $20 USD. Do not subscribe to recurring payments.</textarea>
+          <label>Proposed agent action <span>what the agent intends to do</span></label>
+          <textarea id="action" rows="3">Purchase a $49 USD report with a recurring monthly subscription.</textarea>
+          <div class="button-stack">
+            <button id="submit" class="btn btn-primary">1. Sign &amp; open case <span>↗</span></button>
+            <button id="judge" class="btn btn-outline">2. Request GenLayer verdict <span>⚖</span></button>
+            <button id="refresh" class="btn btn-ghost">3. Read finalized verdict</button>
+          </div>
+          <p class="disclaimer">Prototype only. Wallet signatures are checked in the browser, not cryptographically verified in the contract. This is not a live spending permission, escrow, revocation or payment system. GenLayer writes may consume test GEN and require wallet approval.</p>
+        </div>
+        <aside class="verdict-panel">
+          <div class="step-label">02 / CONSENSUS</div>
+          <h2>The ruling</h2>
+          <div id="verdict" class="verdict-display uncertain"><div class="verdict-symbol">?</div><strong>AWAITING EVIDENCE</strong><small>Nothing submitted yet</small></div>
+          <div class="timeline">
+            <div><span class="timeline-dot"></span><p><b>01 — Wallet authorization</b><small>MetaMask signs the mandate &amp; proposed action</small></p></div>
+            <div><span class="timeline-dot"></span><p><b>02 — On-chain evidence</b><small>GenLayer records immutable case inputs</small></p></div>
+            <div><span class="timeline-dot"></span><p><b>03 — Independent judgments</b><small>Validators separately classify scope compliance</small></p></div>
+            <div><span class="timeline-dot"></span><p><b>04 — Final on-chain outcome</b><small>ALLOW · DENY · UNCERTAIN</small></p></div>
+          </div>
+          <div class="activity"><div class="activity-head">Activity log <button id="clear" class="text-btn">Clear</button></div><pre id="log" aria-live="polite">Ready. Connect MetaMask to begin.</pre></div>
+        </aside>
+      </section>
+      <section class="footnote"><b>What makes this different?</b><span>GenLayer's validator verdict is generated through independent consensus, not a hard-coded browser decision. Ambiguous mandates fail closed to UNCERTAIN.</span></section>
+    </main>
+    <footer>PermissionCourt • An open prototype for the GenLayer Internet Court Partner Demo Lab • No real payments</footer>
+  </div>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

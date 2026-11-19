@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+artifacts/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.pyc
+.env
+.env.*
+!.env.example
+*.log
+*.mp4.tmp
+proof/private/
