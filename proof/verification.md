@@ -13,5 +13,7 @@
 ## Outstanding gates
 - ⚠️ MetaMask authorization/signing path not yet independently completed. Browser's Connect flow has not returned.
 - ⚠️ Python direct-mode tests 7/7 blocked by Windows SDK import `DecodingError: unexpected end of memory`; needs environment fix and retest. Studio actual deployment succeeds.
-- ⚠️ No verified public hosting, polished 45-second video, or GenLayer Portal submission as of this log.
+- ✅ Public app deployed on GitHub Pages; verified HTTPS loaded and read contract verdict DENY.
+- ✅ Video rendered and visually inspected at six frames (3s/10s/17s/24s/31s/39s); 43.00 seconds, 1280×720 at 24 fps H.264/AAC, all three official logos visible, real Studio/application screenshots, and sandbox caveats. Audio mean −25.4 dB, peak −7.7 dB. Full real-time audio listening QA remains unverified.
+- ⚠️ No GenLayer Portal submission as of this log.
 - ⚠️ Signature check is off-chain only; on-chain permission enforcement is by wallet transaction sender, not `personal_sign` verification.

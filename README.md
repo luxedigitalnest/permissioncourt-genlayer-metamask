@@ -4,7 +4,7 @@
 
 PermissionCourt is an experimental Intelligent Contract and browser application that records an AI agent mandate, a proposed action, and a wallet signature, then asks independent GenLayer validators to judge whether the proposed action complies with the mandate.
 
-**Status (2026-11-19):** GenLayer **Studio sandbox** contract deployed and live validator-consensus case finalized as **DENY**. The Vite frontend builds and reads live contract verdicts. A fully authenticated MetaMask browser-to-GenLayer write has **not yet** been independently demonstrated. This repository is an honest engineering demonstration, not a production security or payment product.
+**Status (2026-11-19):** GenLayer **Studio sandbox** contract deployed and live validator-consensus case finalized as **DENY**. The Vite frontend builds and reads live contract verdicts from the public GitHub Pages site. A 43-second evidence video has been generated and its media properties verified. A fully authenticated MetaMask browser-to-GenLayer write has **not yet** been independently demonstrated. This is an engineering prototype, not a production security or payment product.
 
 ## Live evidence
 
@@ -22,6 +22,13 @@ PermissionCourt is an experimental Intelligent Contract and browser application 
 2. **GenLayer:** `PermissionCourt.py` stores the submitted evidence and binds authorization to `gl.message.sender_address`. Only the case creator may request adjudication; IDs cannot be overwritten.
 3. **GenLayer validator consensus:** every validator independently re-runs a semantic classification of the submitted mandate and action. A custom equivalence validator compares the normalized outcomes. Invalid model responses become `UNCERTAIN` (but model nondeterminism can still produce a consensus disagreement).
 4. **UI:** a three-stage workflow signs, submits, requests adjudication, waits for finalization and reads the state back from RPC. Verdicts are `ALLOW`, `DENY`, or `UNCERTAIN`.
+
+## Live public website and verified evidence video
+
+- [Public PermissionCourt application](https://luxedigitalnest.github.io/permissioncourt-genlayer-metamask/)
+- [43-second evidence video (H.264 MP4)](https://luxedigitalnest.github.io/permissioncourt-genlayer-metamask/media/permissioncourt-demo.mp4)
+- [Six-frame video QA contact sheet](https://luxedigitalnest.github.io/permissioncourt-genlayer-metamask/media/contact-sheet.jpg)
+- The original GenLayer, Internet Court and MetaMask brand assets are from [Internet Court's official site](https://internetcourt.org), with trademarks belonging to their respective holders; usage does not imply endorsement.
 
 ## Run frontend locally
 

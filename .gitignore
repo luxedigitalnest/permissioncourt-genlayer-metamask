@@ -12,3 +12,8 @@ frontend/.vite/
 *.log
 *.mp4.tmp
 proof/private/
+
+media/
+proof/assets_scan.py
+
+frontend/public/media/qa_*.jpg
