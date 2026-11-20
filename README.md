@@ -76,4 +76,4 @@ For the read-only reproducible proof: paste case ID `PC_DEMO_20261119_001`, then
 
 ## Mission
 
-[Internet Court Partner Demo Lab](https://portal.genlayer.foundation/mission/101), deadline November 23, 2026. Submission requires public code and a polished **45-second max** video bearing **Internet Court, GenLayer and MetaMask** logos. The video and final submission must represent only evidence actually tested.
+[Internet Court Partner Demo Lab](https://portal.genlayer.foundation/mission/101), deadline November 30, 2026 (verified on the live GenLayer mission page November 20, 2026). Submission requires public code and a polished **45-second max** video bearing **Internet Court, GenLayer and MetaMask** logos. The video and final submission must represent only evidence actually tested.
