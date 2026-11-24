@@ -40,3 +40,11 @@ export function canonicalMandate({wallet, contract, caseId, mandate, action, non
     'Purpose: evidence of a proposed action only; not a payment or delegation'
   ].join('\n');
 }
+
+export function assertWriteContext({signed,current,account,chainId}){
+  if(!signed||!current||typeof account!=='string'||!ADDRESS.test(account))throw Error('Wallet account unavailable; reconnect MetaMask');
+  if(typeof signed.wallet!=='string'||signed.wallet.toLowerCase()!==account.toLowerCase())throw Error('Wallet account changed; prepare a new signature');
+  if(chainId!=='0xf22f'&&chainId!==61999)throw Error('Wallet is not on GenLayer Studionet 61999');
+  if(typeof signed.contract!=='string'||typeof current.contract!=='string'||signed.contract.toLowerCase()!==current.contract.toLowerCase()||signed.caseId!==current.caseId||signed.mandate!==current.mandate||signed.action!==current.action)throw Error('Case input changed; prepare a new signature');
+  return true;
+}
