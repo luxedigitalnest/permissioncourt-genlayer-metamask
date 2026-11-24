@@ -2,7 +2,7 @@ import './styles.css';
 import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import { recoverMessageAddress, stringToHex } from 'viem';
-import { canonicalMandate, normalizeCaseId, normalizeVerdict } from './mandate.js';
+import { canonicalMandate, normalizeCaseId, normalizeVerdict, assertWriteContext } from './mandate.js';
 
 const el = id => document.getElementById(id);
 const contractField = el('contract');
@@ -12,6 +12,7 @@ if (defaultAddress) contractField.value = defaultAddress;
 caseField.value = generateCaseId();
 let account = '';
 let writeClient;
+let busy = false;
 const readClient = createClient({chain: studionet});
 
 function generateCaseId() {
@@ -31,11 +32,13 @@ function status(state, title, subtitle='') {
 }
 function bindBusy(id, fn) {
   el(id).addEventListener('click', async () => {
-    const button = el(id);
-    button.disabled = true;
+    if (busy) return;
+    busy = true;
+    const buttons = ['connect','submit','judge','refresh'].map(el);
+    buttons.forEach(button => button.disabled = true);
     try { await fn(); }
     catch (error) { log('ERROR: ' + (error?.shortMessage || error?.message || String(error))); status('uncertain', 'ACTION NOT COMPLETED', 'Review the activity log'); }
-    finally { button.disabled = false; }
+    finally { busy = false; buttons.forEach(button => button.disabled = false); }
   });
 }
 function caseInputs() {
@@ -52,26 +55,40 @@ async function connect() {
   if (!window.ethereum?.request) throw new Error('MetaMask not detected. Open this in a browser with MetaMask.');
   const accounts = await window.ethereum.request({ method:'eth_requestAccounts' });
   if (!accounts?.length) throw new Error('No wallet account authorized');
-  account = accounts[0];
-  writeClient = createClient({chain: studionet, account, provider: window.ethereum});
-  await writeClient.connect('studionet');
+  const selectedAccount = accounts[0];
+  const client = createClient({chain: studionet, account: selectedAccount, provider: window.ethereum});
+  await client.connect('studionet');
+  const authorized = await window.ethereum.request({method:'eth_accounts'});
+  if (!authorized?.length || authorized[0].toLowerCase() !== selectedAccount.toLowerCase()) throw new Error('Wallet account changed while connecting');
+  account = selectedAccount;
+  writeClient = client;
   el('connect').textContent = account.slice(0,6) + '…' + account.slice(-4);
   log('MetaMask wallet connected: ' + account);
 }
 
-async function sendWrite(functionName, args, summary) {
-  if (!writeClient) throw new Error('Connect MetaMask first');
-  const address = caseInputs().contract;
-  const write = {address, functionName, args};
+async function verifyWriteContext(snapshot,client) {
+  if (!client || client !== writeClient) throw new Error('Wallet session changed; reconnect and retry');
+  const [authorized,chainId] = await Promise.all([
+    window.ethereum.request({method:'eth_accounts'}),
+    window.ethereum.request({method:'eth_chainId'})
+  ]);
+  if(client !== writeClient) throw new Error('Wallet session changed; reconnect and retry');
+  assertWriteContext({signed:snapshot,current:caseInputs(),account:authorized?.[0],chainId});
+}
+
+async function sendWrite(functionName, args, summary, snapshot, client) {
+  await verifyWriteContext(snapshot,client);
+  const write = {address:snapshot.contract, functionName, args};
   log('Preparing Studionet transaction for ' + functionName + '…');
   // Stable Studionet SDK v1.1.8 does not expose v2 fee-estimation helpers.
-  if (!window.confirm(summary + '\n\nThis may require test GEN. MetaMask will display the signing details. Proceed?')) {
+  if (!window.confirm(summary + '\n\nStudionet 61999 · Contract: ' + snapshot.contract + '\nCase: ' + snapshot.caseId + '\nSender: ' + snapshot.wallet + '\nThis may require test GEN. MetaMask will display the signing details. Proceed?')) {
     throw new Error('User canceled before submitting a transaction');
   }
-  const hash = await writeClient.writeContract({...write, value: 0n});
+  await verifyWriteContext(snapshot,client);
+  const hash = await client.writeContract({...write, value: 0n});
   log('Transaction submitted: ' + hash);
   status('uncertain', 'WAITING FOR CONSENSUS', 'Transaction ' + String(hash).slice(0,16) + '…');
-  const receipt = await writeClient.waitForTransactionReceipt({hash, status:'FINALIZED'});
+  const receipt = await client.waitForTransactionReceipt({hash, status:'FINALIZED'});
   if (receipt?.statusName !== 'FINALIZED' || receipt?.txExecutionResultName !== 'SUCCESS') {
     throw new Error('Transaction not finalized successfully: ' + (receipt?.statusName || 'unknown') + '/' + (receipt?.txExecutionResultName || 'unknown'));
   }
@@ -81,21 +98,23 @@ async function sendWrite(functionName, args, summary) {
 
 async function submitCase() {
   if (!writeClient) await connect();
-  const inputs = caseInputs();
+  const inputs = Object.freeze({...caseInputs(), wallet: account});
+  const client = writeClient;
+  await verifyWriteContext(inputs,client);
   const nonce = crypto.randomUUID();
-  const message = canonicalMandate({...inputs, wallet: account, nonce});
+  const message = canonicalMandate({...inputs, nonce});
   log('Requesting a wallet signature (no asset transfer).');
   const signature = await window.ethereum.request({
     method: 'personal_sign',
-    params: [stringToHex(message), account]
+    params: [stringToHex(message), inputs.wallet]
   });
   const recovered = await recoverMessageAddress({message, signature});
-  if (recovered.toLowerCase() !== account.toLowerCase()) throw new Error('Signature verification failed');
+  if (recovered.toLowerCase() !== inputs.wallet.toLowerCase()) throw new Error('Signature verification failed');
   log('MetaMask signature recovered and matched the connected address.');
   await sendWrite(
     'open_case',
     [inputs.caseId, inputs.mandate, inputs.action, signature],
-    'Store the signed mandate and proposed action on GenLayer Studionet?'
+    'Store the signed mandate and proposed action on GenLayer Studionet?', inputs, client
   );
   status('uncertain', 'CASE CREATED', 'Now request a validator ruling');
   log('Case ID: ' + inputs.caseId);
@@ -103,10 +122,12 @@ async function submitCase() {
 
 async function adjudicate() {
   if (!writeClient) await connect();
-  const input = caseInputs();
+  const input = Object.freeze({...caseInputs(), wallet:account});
+  const client = writeClient;
   await sendWrite('adjudicate', [input.caseId],
-    'Ask independent GenLayer validators whether the action follows the mandate?');
-  await refreshVerdict();
+    'Ask independent GenLayer validators whether the action follows the mandate?', input, client);
+  if (contractField.value.trim().toLowerCase() === input.contract.toLowerCase() && caseField.value.trim() === input.caseId) await refreshVerdict();
+  else log('Adjudication finalized for ' + input.caseId + '; selected case changed.');
 }
 
 async function refreshVerdict() {
@@ -114,6 +135,9 @@ async function refreshVerdict() {
   const verdict = await readClient.readContract({
     address:input.contract, functionName:'get_verdict', args:[input.caseId]
   });
+  if (contractField.value.trim().toLowerCase() !== input.contract.toLowerCase() || caseField.value.trim() !== input.caseId) {
+    log('Read discarded: selected contract or case changed while waiting'); return;
+  }
   if (!verdict) throw new Error('Case not found or not yet finalized');
   const normalized = normalizeVerdict(String(verdict));
   status(normalized === 'ALLOW' ? 'allow' : normalized === 'DENY' ? 'deny' : 'uncertain',
@@ -123,6 +147,15 @@ async function refreshVerdict() {
   log('Read contract verdict: ' + verdict);
 }
 
+if (window.ethereum?.on) {
+  const invalidate = () => {
+    account = ''; writeClient = undefined;
+    el('connect').textContent = 'Connect MetaMask';
+    log('Wallet account or network changed. Reconnect before writing.');
+  };
+  window.ethereum.on('accountsChanged', invalidate);
+  window.ethereum.on('chainChanged', invalidate);
+}
 bindBusy('connect', connect);
 bindBusy('submit', submitCase);
 bindBusy('judge', adjudicate);
